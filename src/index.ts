@@ -24,8 +24,10 @@ import "@babylonjs/core/Materials/standardMaterial"
 import "@babylonjs/inspector";
 
 import CsvData from "./CsvData";
-import OpenStreetMap from "./OpenStreetMap";
-import MapBox from "./MapBox";
+//import OpenStreetMap from "./babylonjs-mapping/OpenStreetMap";
+//import MapBox from "./babylonjs-mapping/MapBox";
+
+import TileSet from "./babylonjs-mapping/TileSet";
 
 class Game {
     private canvas: HTMLCanvasElement;
@@ -33,8 +35,7 @@ class Game {
     private scene: Scene;
 
     private ourCSV: CsvData;
-    private ourOSM: OpenStreetMap;
-    private ourMB: MapBox;
+    private ourTS: TileSet;
 
     private lastSelectedSphereIndex: number=-1;
     private lastSelectedSphere: Mesh;
@@ -71,7 +72,9 @@ class Game {
    }
    
     private async createScene() {
-        var camera = new UniversalCamera("camera1", new Vector3(90, 45, 0), this.scene);
+        var camera = new UniversalCamera("camera1", new Vector3(0, 40, -80), this.scene);
+        //var camera = new UniversalCamera("camera1", new Vector3(90, 45, 0), this.scene); //grand canyon
+        
         camera.setTarget(Vector3.Zero());
         camera.attachControl(this.canvas, true);
 
@@ -88,22 +91,16 @@ class Game {
         this.ourCSV=new CsvData();
         await this.ourCSV.processURL(window.location.href + "JCSU.csv");
 
-        //this.ourOSM = new OpenStreetMap(this.scene);
-        //this.ourOSM.createBaseMap();
-        //const centerCoords = new Vector2(-80.8400777, 35.2258461);
-        //this.ourOSM.updateBaseMap(centerCoords, 16);
-        //this.ourOSM.generateBuildings(3).then(() => { console.log("all buildings generated!"); })
-
-        this.ourMB = new MapBox(this.scene);
-        this.ourMB.createBaseMap();
-
-        
-
-        //const centerCoords = new Vector2(-80.8400777, 35.2258461); //charlotte
-        const centerCoords = new Vector2(-112.11265952053303, 36.10054279295824); //grand canyon
+        this.ourTS = new TileSet(this.scene,4,100);
+         this.ourTS.setRasterProvider("OSM");
+ 
+        const centerCoords = new Vector2(-80.8400777, 35.2258461); //charlotte
+        //const centerCoords = new Vector2(-112.11265952053303, 36.10054279295824); //grand canyon
         //const centerCoords = new Vector2(31.254708, 29.852183); //egypt
-        this.ourMB.updateBaseMap(centerCoords, 14,true); //16
 
+        this.ourTS.updateRaster(centerCoords, 16);
+
+        //this.ourOSM.generateBuildings(3).then(() => { console.log("all buildings generated!"); })
 
         var myMaterial = new StandardMaterial("infoSpotMaterial", this.scene);
         myMaterial.diffuseColor = new Color3(0.25, 1, 0.25);
@@ -115,16 +112,11 @@ class Game {
 
         var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-        /*for (let i = 0; i < this.ourCSV.numRows(); i++) {
+        for (let i = 0; i < this.ourCSV.numRows(); i++) {
 
             const ourPos = this.ourCSV.getCoordinates(i);
-
-            //const convertedPos = this.ourOSM.GetWorldPosition(ourPos)
-            const convertedPos = this.ourMB.GetWorldPosition(ourPos); //this should be in a util class
-
+            const convertedPos = this.ourTS.GetWorldPosition(ourPos)
             const sphere = MeshBuilder.CreateSphere(this.ourCSV.getRow(i)[2], { diameter: 1.0, segments: 4 }, this.scene);
-
-            //originalSphere.createInstance();
 
             sphere.position.y = 0;
             sphere.position.x = convertedPos.x;
@@ -193,13 +185,12 @@ class Game {
             );
 
             sphere.bakeCurrentTransformIntoVertices();
-            sphere.freezeWorldMatrix();
-            
-        }*/
+            sphere.freezeWorldMatrix();            
+        }
 
         // Show the debug scene explorer and object inspector
         // You should comment this out when you build your final program 
-        //this.scene.debugLayer.show();
+        this.scene.debugLayer.show();
     }
 
     // The main update loop will be executed once per frame before the scene is rendered
