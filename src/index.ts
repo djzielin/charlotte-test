@@ -99,8 +99,7 @@ class Game {
         //const centerCoords = new Vector2(31.254708, 29.852183); //egypt
 
         this.ourTS.updateRaster(centerCoords, 16);
-
-        //this.ourOSM.generateBuildings(3).then(() => { console.log("all buildings generated!"); })
+        this.ourTS.generateBuildings(3);
 
         var myMaterial = new StandardMaterial("infoSpotMaterial", this.scene);
         myMaterial.diffuseColor = new Color3(0.25, 1, 0.25);
