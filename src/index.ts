@@ -91,8 +91,9 @@ class Game {
         this.ourCSV=new CsvData();
         await this.ourCSV.processURL(window.location.href + "JCSU.csv");
 
-        this.ourTS = new TileSet(this.scene,4,100);
-         this.ourTS.setRasterProvider("OSM");
+        this.ourTS = new TileSet(4,100,this.scene);
+        //this.ourTS.setRasterProvider("OSM");
+        this.ourTS.setRasterProvider("MB","pk.eyJ1IjoiZGp6aWVsaW4iLCJhIjoiY2wwdHh2NDU4MGZlbjNicGF1bHU2enkzZSJ9.IiKpYveO-fNezdrqmTpmZg");
  
         const centerCoords = new Vector2(-80.8400777, 35.2258461); //charlotte
         //const centerCoords = new Vector2(-112.11265952053303, 36.10054279295824); //grand canyon
