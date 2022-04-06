@@ -15,9 +15,11 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder"
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { ActionManager } from "@babylonjs/core";
 import { ExecuteCodeAction } from "@babylonjs/core";
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import * as GUI from "@babylonjs/gui/";
 
 import "@babylonjs/core/Materials/standardMaterial"
@@ -40,6 +42,8 @@ class Game {
     private lastSelectedSphereIndex: number=-1;
     private lastSelectedSphere: Mesh;
     private previousButton: GUI.Button;
+
+    private maxPrecision=64;
 
     private spherePositions: Vector3[]=[];
 
@@ -87,22 +91,42 @@ class Game {
 
         var light2 = new DirectionalLight("DirectionalLight", new Vector3(0, -1, 1), this.scene);
         light2.intensity=0.5;
-        
-        this.ourCSV=new CsvData();
-        await this.ourCSV.processURL(window.location.href + "JCSU.csv");
 
-        this.ourTS = new TileSet(4,100,this.scene);
+        //from https://doc.babylonjs.com/divingDeeper/environment/skybox
+        var skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, this.scene);
+        var skyboxMaterial = new StandardMaterial("skyBox", this.scene);
+        skyboxMaterial.backFaceCulling = false;
+        skyboxMaterial.reflectionTexture = new CubeTexture("textures/TropicalSunnyDay", this.scene);
+        //skyboxMaterial.reflectionTexture = new CubeTexture("textures/skybox", scene);
+        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+        skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+        skyboxMaterial.specularColor = new Color3(0, 0, 0);
+        skybox.material = skyboxMaterial;
+        
+        //this.ourCSV=new CsvData();
+        //await this.ourCSV.processURL(window.location.href + "JCSU.csv");
+
+        this.ourTS = new TileSet(10,500,this.maxPrecision,this.scene);
         //this.ourTS.setRasterProvider("OSM");
         this.ourTS.setRasterProvider("MB","pk.eyJ1IjoiZGp6aWVsaW4iLCJhIjoiY2wwdHh2NDU4MGZlbjNicGF1bHU2enkzZSJ9.IiKpYveO-fNezdrqmTpmZg");
  
-        const centerCoords = new Vector2(-80.8400777, 35.2258461); //charlotte
-        //const centerCoords = new Vector2(-112.11265952053303, 36.10054279295824); //grand canyon
-        //const centerCoords = new Vector2(31.254708, 29.852183); //egypt
+        //const centerCoords = new Vector2(-80.8400777, 35.2258461); //charlotte
+        const centerCoords = new Vector2(-112.11265952053303, 36.10054279295824); //grand canyon
+        //const centerCoords = new Vector2(31.134223884646893, 29.979077809112457); //egypt
+        
+        const zoom = 14; 
 
-        this.ourTS.updateRaster(centerCoords, 16);
-        this.ourTS.generateBuildings(3);
+        this.ourTS.updateRaster(centerCoords, zoom);
+        this.ourTS.updateTerrain(1.0).then(() => {
+            console.log("all terrain ready!");
+            const precisions=[this.maxPrecision / 4, this.maxPrecision / 8, this.maxPrecision / 16, this.maxPrecision / 32, 0];
+            const distances=[500/2, 500, 500*2, 500*3, 500*4];
+            this.ourTS.setupTerrainLOD(precisions,distances);
+        });
 
-        var myMaterial = new StandardMaterial("infoSpotMaterial", this.scene);
+        //this.ourTS.generateBuildings(3);
+
+    /*    var myMaterial = new StandardMaterial("infoSpotMaterial", this.scene);
         myMaterial.diffuseColor = new Color3(0.25, 1, 0.25);
         myMaterial.freeze();
 
@@ -186,7 +210,7 @@ class Game {
 
             sphere.bakeCurrentTransformIntoVertices();
             sphere.freezeWorldMatrix();            
-        }
+        }*/
 
         // Show the debug scene explorer and object inspector
         // You should comment this out when you build your final program 
