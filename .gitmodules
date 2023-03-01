@@ -1,4 +1,0 @@
-
-[submodule "src/babylonjs-mapping"]
-	path = src/babylonjs-mapping
-	url = git@github.com:djzielin/babylonjs-mapping.git
